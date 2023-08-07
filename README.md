@@ -30,10 +30,11 @@ Happy chatting!
 
 ### Chat Settings
 
-To increase chat accuracy increase the number of matched documents to ChatGPT in `qa.py` file, i.e.:
+To increase chat accuracy increase the number of matched documents to ChatGPT in `config.ini` file, i.e.:
 
-```python
-result.search_kwargs['k'] = 10
+```ini
+[retriever]
+k = 10
 ```
 
-Keep in mind this will generate more usage on your OpenAI plan.
+Keep in mind this will generate more usage (dollars) on your OpenAI plan.

@@ -1,4 +1,5 @@
 colored
+configparser
 deeplake
 langchain
 openai

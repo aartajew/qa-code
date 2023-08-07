@@ -2,6 +2,7 @@
 
 from dotenv import load_dotenv
 
+import configparser
 import os
 import sys
 
@@ -14,6 +15,8 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores import DeepLake
 
 load_dotenv()
+config = configparser.ConfigParser()
+config.read('config.ini')
 
 
 def main(repo, reindex):
@@ -36,7 +39,7 @@ def get_db_path(repo):
 
 
 def get_qa_chain(repo):
-    model = ChatOpenAI(model_name='gpt-3.5-turbo')
+    model = ChatOpenAI(model_name=config['chat']['model'])
     qa = ConversationalRetrievalChain.from_llm(model, retriever=get_retriever(repo))
     return qa
 
@@ -47,18 +50,19 @@ def chat(repo):
         sys.exit(1)
 
     qa = get_qa_chain(repo)
+    cfg = config['chat']
     chat_history = []
     print(f'{Fore.white}Welcome to the chat! Ask you question or type quit, q or exit to finish.{Style.reset}')
     while True:
         query = input(f'{Fore.green}Prompt: {Style.reset}')
         if query in ['quit', 'q', 'exit']:
             sys.exit()
-        if len(query) > 10:
+        if len(query) > cfg.getint('min_prompt_len'):
             result = qa({'question': query, 'chat_history': chat_history})
             chat_history.append((query, result['answer']))
             print(f"{Fore.yellow}{result['answer']}{Style.reset}")
         else:
-            print(f'{Fore.red}Provide at least 10 characters{Style.reset}')
+            print(f"{Fore.red}Provide at least {cfg.getint('min_prompt_len')} characters{Style.reset}")
 
 
 def get_retriever(repo):
@@ -68,11 +72,12 @@ def get_retriever(repo):
         embedding_function=get_embeddings(),
         verbose=True
     )
+    cfg = config['retriever']
     result = db.as_retriever()
-    result.search_kwargs['distance_metric'] = 'cos'
-    result.search_kwargs['fetch_k'] = 100
-    result.search_kwargs['maximal_marginal_relevance'] = True
-    result.search_kwargs['k'] = 1
+    result.search_kwargs['distance_metric'] = cfg.get('distance_metric')
+    result.search_kwargs['fetch_k'] = cfg.getint('fetch_k')
+    result.search_kwargs['maximal_marginal_relevance'] = cfg.getboolean('maximal_marginal_relevance')
+    result.search_kwargs['k'] = cfg.getint('k')
     return result
 
 
