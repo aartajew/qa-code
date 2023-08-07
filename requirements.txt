@@ -1,0 +1,6 @@
+colored
+deeplake
+langchain
+openai
+python-dotenv
+tiktoken
